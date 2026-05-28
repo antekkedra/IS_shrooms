@@ -22,7 +22,7 @@ public class Main {
         fo.fungiOccurrence(DBurl, props);
 
 
-        //  SoilData so = new SoilData();
-        //so.soilData(DBurl, props);
+        SoilData so = new SoilData();
+        so.soilData(DBurl, props);
     }
 }
