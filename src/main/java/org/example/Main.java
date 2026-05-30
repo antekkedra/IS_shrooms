@@ -10,6 +10,19 @@ public class Main {
         props.setProperty("user", "postgres");
         props.setProperty("password", "haslo");
 
+        Connection conn = DriverManager.getConnection(DBurl, props);
+        Statement st = conn.createStatement();
+
+        st.execute("""
+    TRUNCATE TABLE
+        analysis_result,
+        fungi_occurrence,
+        soil_data
+    RESTART IDENTITY CASCADE
+""");
+
+        conn.close();
+
         FungiOccurrence fo = new FungiOccurrence();
         SoilData so = new SoilData();
 

@@ -28,7 +28,7 @@ public class SoilData {
         try (Connection conn = DriverManager.getConnection(DBurl, props);
              Statement st = conn.createStatement()) {
             System.out.println("Importing soil data.");
-            st.execute("TRUNCATE TABLE soil_data RESTART IDENTITY CASCADE");
+           // st.execute("TRUNCATE TABLE soil_data RESTART IDENTITY CASCADE");
 
             try (ResultSet rs = st.executeQuery(selectLocations);
                  PreparedStatement pst = conn.prepareStatement(insertSoil)) {

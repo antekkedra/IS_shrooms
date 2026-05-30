@@ -48,7 +48,7 @@ public class FungiOccurrence {
         Connection conn = DriverManager.getConnection(DBurl, props);
         System.out.println("Importing fungi data.");
         Statement st = conn.createStatement();
-        st.execute("TRUNCATE TABLE fungi_occurrence RESTART IDENTITY CASCADE");
+        //st.execute("TRUNCATE TABLE fungi_occurrence RESTART IDENTITY");
         String insertSQL = "INSERT INTO fungi_occurrence (species, genus, family, latitude, longitude, event_date, country) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pst = conn.prepareStatement(insertSQL)) {
             for (String[] record : records) {
