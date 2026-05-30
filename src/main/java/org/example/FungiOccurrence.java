@@ -3,7 +3,6 @@ package org.example;
 import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -27,7 +26,7 @@ public class FungiOccurrence {
                 .getResourceAsStream("occurrences.csv");
 
         if (is == null) {
-            throw new RuntimeException("Nie znaleziono pliku occurrences.csv");
+            throw new RuntimeException("File was not found");
         }
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             String line;
@@ -47,9 +46,9 @@ public class FungiOccurrence {
         }
 
         Connection conn = DriverManager.getConnection(DBurl, props);
-        System.out.println("Connected to PostgreSQL database!");
+        System.out.println("Importing fungi data.");
         Statement st = conn.createStatement();
-        st.execute("DELETE FROM fungi_occurrence");
+        st.execute("TRUNCATE TABLE fungi_occurrence RESTART IDENTITY CASCADE");
         String insertSQL = "INSERT INTO fungi_occurrence (species, genus, family, latitude, longitude, event_date, country) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pst = conn.prepareStatement(insertSQL)) {
             for (String[] record : records) {
@@ -74,7 +73,7 @@ public class FungiOccurrence {
                 }
             }
             pst.executeBatch();
-            System.out.println("Dane zostały wstawione do bazy.");
+            System.out.println("Fungi data imported successfully.");
         }
 
 

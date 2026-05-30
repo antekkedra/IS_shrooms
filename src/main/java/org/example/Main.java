@@ -1,13 +1,6 @@
 package org.example;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 
 public class Main {
@@ -18,11 +11,10 @@ public class Main {
         props.setProperty("password", "haslo");
 
         FungiOccurrence fo = new FungiOccurrence();
+        SoilData so = new SoilData();
+
 
         fo.fungiOccurrence(DBurl, props);
-
-
-        SoilData so = new SoilData();
         so.soilData(DBurl, props);
     }
 }

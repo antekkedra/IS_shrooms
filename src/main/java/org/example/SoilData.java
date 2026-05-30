@@ -16,7 +16,9 @@ public class SoilData {
                 "SELECT DISTINCT latitude, longitude " +
                         "FROM fungi_occurrence " +
                         "WHERE latitude <> 0 AND longitude <> 0 " +
-                        "LIMIT 10";
+                        "ORDER BY latitude, longitude " +
+                        "LIMIT 10;";
+
         String insertSoil =
                 "INSERT INTO soil_data " +
                         "(ph, organic_carbon, clay, sand, silt, soil_moisture, depth, longitude, latitude) " +
@@ -24,70 +26,89 @@ public class SoilData {
                         "ON CONFLICT (depth, longitude, latitude) DO NOTHING";
 
         try (Connection conn = DriverManager.getConnection(DBurl, props);
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(selectLocations);
-             PreparedStatement pst = conn.prepareStatement(insertSoil)) {
+             Statement st = conn.createStatement()) {
+            System.out.println("Importing soil data.");
+            st.execute("TRUNCATE TABLE soil_data RESTART IDENTITY CASCADE");
 
-            while (rs.next()) {
-                double lat = rs.getDouble("latitude");
-                double lon = rs.getDouble("longitude");
+            try (ResultSet rs = st.executeQuery(selectLocations);
+                 PreparedStatement pst = conn.prepareStatement(insertSoil)) {
 
-                String apiUrl =
-                        "https://rest.isric.org/soilgrids/v2.0/properties/query" +
-                                "?lat=" + lat +
-                                "&lon=" + lon +
-                                "&property=phh2o&property=soc&property=clay" +
-                                "&property=sand&property=silt&property=wv0033" +
-                                "&depth=0-5cm&value=mean";
 
-                HttpURLConnection connApi = (HttpURLConnection) new URL(apiUrl).openConnection();
-                connApi.setRequestMethod("GET");
-                connApi.setConnectTimeout(15000);
-                connApi.setReadTimeout(15000);
+                while (rs.next()) {
+                    double lat = rs.getDouble("latitude");
+                    double lon = rs.getDouble("longitude");
 
-                int responseCode;
-                try {
-                    responseCode = connApi.getResponseCode();
-                } catch (java.net.SocketTimeoutException e) {
-                    System.out.println("Timeout for: " + lat + ", " + lon + " – skipped");
-                    continue;
-                }
+                    String apiUrl =
+                            "https://rest.isric.org/soilgrids/v2.0/properties/query" +
+                                    "?lat=" + lat +
+                                    "&lon=" + lon +
+                                    "&property=phh2o&property=soc&property=clay" +
+                                    "&property=sand&property=silt&property=wv0033" +
+                                    "&depth=0-5cm&value=mean";
 
-                if (responseCode != 200) {
-                    System.out.println("API error " + responseCode + " for: " + lat + ", " + lon);
-                    continue;
-                }
+                    HttpURLConnection connApi = (HttpURLConnection) new URL(apiUrl).openConnection();
+                    connApi.setRequestMethod("GET");
+                    connApi.setConnectTimeout(15000);
+                    connApi.setReadTimeout(15000);
 
-                StringBuilder jsonText = new StringBuilder();
-                try (Scanner sc = new Scanner(connApi.getInputStream())) {
-                    while (sc.hasNext()) {
-                        jsonText.append(sc.nextLine());
+                    int responseCode;
+                    try {
+                        responseCode = connApi.getResponseCode();
+                    } catch (java.net.SocketTimeoutException e) {
+                        System.out.println("Timeout for: " + lat + ", " + lon + " – skipped");
+                        continue;
                     }
+
+                    if (responseCode != 200) {
+                        System.out.println("API error " + responseCode + " for: " + lat + ", " + lon);
+                        continue;
+                    }
+
+                    StringBuilder jsonText = new StringBuilder();
+                    try (Scanner sc = new Scanner(connApi.getInputStream())) {
+                        while (sc.hasNext()) {
+                            jsonText.append(sc.nextLine());
+                        }
+                    }
+
+                    JSONObject json = new JSONObject(jsonText.toString());
+                    JSONObject propsJson = json.getJSONObject("properties");
+
+
+                    pst.setDouble(1, getValue(propsJson, "phh2o"));
+                    pst.setDouble(2, getValue(propsJson, "soc"));
+                    pst.setDouble(3, getValue(propsJson, "clay"));
+                    pst.setDouble(4, getValue(propsJson, "sand"));
+                    pst.setDouble(5, getValue(propsJson, "silt"));
+                    pst.setDouble(6, getValue(propsJson, "wv0033"));
+                    pst.setInt(7, 5);
+                    pst.setDouble(8, lon);
+                    pst.setDouble(9, lat);
+
+
+                    pst.addBatch();
+
+                    Thread.sleep(300); // API rate limiting
                 }
 
-                JSONObject json = new JSONObject(jsonText.toString());
-                JSONObject propsJson = json.getJSONObject("properties");
+                pst.executeBatch();
+                System.out.println("Soil data imported successfully.");
 
+                String updateRelation =
+                        """
+                                UPDATE fungi_occurrence f
+                                SET soil_data_id = s.id
+                                FROM soil_data s
+                                WHERE f.latitude = s.latitude
+                                  AND f.longitude = s.longitude
+                                """;
 
-                pst.setDouble(1, getValue(propsJson, "phh2o"));
-                pst.setDouble(2, getValue(propsJson, "soc"));
-                pst.setDouble(3, getValue(propsJson, "clay"));
-                pst.setDouble(4, getValue(propsJson, "sand"));
-                pst.setDouble(5, getValue(propsJson, "silt"));
-                pst.setDouble(6, getValue(propsJson, "wv0033"));
-                pst.setInt(7, 5);
-                pst.setDouble(8, lon);
-                pst.setDouble(9, lat);
-
-
-                pst.addBatch();
-
-                Thread.sleep(300); // ochrona przed limitem API
+            try (
+                    Statement updateStmt = conn.createStatement()) {
+                int updatedRows = updateStmt.executeUpdate(updateRelation);
+                System.out.println("Updated relations: " + updatedRows);
             }
-
-            pst.executeBatch();
-            System.out.println("Soil data imported successfully.");
-
+        }
         } catch (Exception e) {
             e.printStackTrace();
         }
