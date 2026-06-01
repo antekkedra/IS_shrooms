@@ -1,12 +1,12 @@
 package org.example.shroomsanalyzer.service;
 
-
 import org.example.shroomsanalyzer.dto.AnalyzeFamilyDTO;
 import org.example.shroomsanalyzer.entity.AnalysisResult;
-import org.example.shroomsanalyzer.entity.FungiOccurrence;
 import org.example.shroomsanalyzer.repository.AnalysisResultRepository;
 import org.example.shroomsanalyzer.repository.FungiOccurrenceRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,16 +21,20 @@ public class AnalysisService {
         this.analysisResultRepository = analysisResultRepository;
     }
 
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public List<AnalysisResult> getAllAnalysis() {
         return analysisResultRepository.findAll();
     }
 
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
     public Optional<AnalysisResult> getAnalysisById(Integer id) {
         return analysisResultRepository.findById(id);
     }
 
-    public AnalyzeFamilyDTO analyzeByFamily(String family){
+    // REPEATABLE_READ: analiza agreguje dane z wielu wierszy — gwarantuje,
+    // że wartości odczytane raz nie zmienią się w trakcie obliczeń
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public AnalyzeFamilyDTO analyzeByFamily(String family) {
         return fungiOccurrenceRepository.analyzeByFamily(family);
     }
-
 }

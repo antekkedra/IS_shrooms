@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shrooms Analyzer — Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="navbar-brand">
+        Shrooms Analyzer
+        <span id="adminBadge" class="admin-badge hidden">ADMIN</span>
+    </div>
+    <div class="navbar-user">
+        <span>Zalogowany jako: <strong id="navUsername">…</strong></span>
+        <button class="btn btn-danger btn-sm" id="logoutBtn">Wyloguj</button>
+    </div>
+</nav>
+
+<!-- TABS -->
+<div class="tabs">
+    <button class="tab-btn active" data-target="paneFungi">Grzyby</button>
+    <button class="tab-btn" id="tabSoil" data-target="paneSoil">Gleba</button>
+    <button class="tab-btn" id="tabAnalysis" data-target="paneAnalysis">Analiza</button>
+    <button class="tab-btn hidden" id="tabAdmin" data-target="paneAdmin">Admin</button>
+</div>
+
+<!-- CONTENT -->
+<div class="main-content">
+
+    <!-- ── GRZYBY ─────────────────────────────────────────── -->
+    <div class="tab-pane active" id="paneFungi">
+        <div class="section-header">
+            <h2>Wystąpienia grzybów</h2>
+            <button class="btn btn-accent btn-sm" id="exportFungiBtn">⬇ Eksportuj XML</button>
+        </div>
+
+        <div class="controls">
+            <div class="form-group">
+                <label>Szukaj po gatunku</label>
+                <input type="text" id="searchSpecies" placeholder="np. Amanita">
+            </div>
+            <button class="btn btn-secondary" id="searchSpeciesBtn">Szukaj</button>
+        </div>
+
+        <div class="controls">
+            <div class="form-group">
+                <label>Analizuj po rodzinie</label>
+                <input type="text" id="analyzeFamily" placeholder="np. Amanitaceae">
+            </div>
+            <button class="btn btn-primary" id="analyzeFamilyBtn">Analizuj</button>
+        </div>
+
+        <div id="familyResult" class="hidden"></div>
+
+        <div class="card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Gatunek</th><th>Rodzaj</th><th>Rodzina</th>
+                            <th>Kraj</th><th>Szerokość</th><th>Długość</th><th>Data zdarzenia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fungiBody">
+                        <tr><td colspan="8" class="no-data">Ładowanie…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── GLEBA ──────────────────────────────────────────── -->
+    <div class="tab-pane" id="paneSoil">
+        <div class="section-header">
+            <h2>Dane glebowe</h2>
+            <button class="btn btn-accent btn-sm" id="exportSoilBtn">⬇ Eksportuj XML</button>
+        </div>
+        <div class="card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>pH</th><th>Węgiel org.</th><th>Glina (%)</th>
+                            <th>Piasek (%)</th><th>Muł (%)</th><th>Wilgotność</th>
+                            <th>Głębokość</th><th>Szer.</th><th>Dług.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="soilBody">
+                        <tr><td colspan="10" class="no-data">Kliknij zakładkę, aby załadować dane</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── ANALIZA ────────────────────────────────────────── -->
+    <div class="tab-pane" id="paneAnalysis">
+        <div class="section-header">
+            <h2>Wyniki analiz</h2>
+            <button class="btn btn-accent btn-sm" id="exportAnalysisBtn">⬇ Eksportuj XML</button>
+        </div>
+        <div class="card">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Gatunek</th><th>Rodzina</th>
+                            <th>Wartość korelacji</th><th>Data analizy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="analysisBody">
+                        <tr><td colspan="5" class="no-data">Kliknij zakładkę, aby załadować dane</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── ADMIN ──────────────────────────────────────────── -->
+    <div class="tab-pane" id="paneAdmin">
+        <div class="section-header">
+            <h2>Panel administratora</h2>
+        </div>
+        <div class="admin-info">
+            <h3>Strefa admina</h3>
+            <p style="margin:.5rem 0 1rem">Zalogowany z rolą: <span id="adminRole" class="admin-badge">—</span></p>
+            <p style="color:#555;font-size:.9rem">
+                Ta sekcja jest dostępna wyłącznie dla użytkowników z rolą <strong>ADMIN</strong>.
+                Możliwości: zarządzanie użytkownikami, pełen dostęp do danych.
+            </p>
+        </div>
+    </div>
+
+</div><!-- /main-content -->
+
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
