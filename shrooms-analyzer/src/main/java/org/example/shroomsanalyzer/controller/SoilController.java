@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/soil")
+@RequestMapping("/api/public/soil")
 public class SoilController {
     private final SoilService service;
 

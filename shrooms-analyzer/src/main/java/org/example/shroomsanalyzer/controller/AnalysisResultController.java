@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/analysis")
+@RequestMapping("api/public/analysis")
 public class AnalysisResultController {
     private final AnalysisService analysisService;
     private final FungiService fungiService;
