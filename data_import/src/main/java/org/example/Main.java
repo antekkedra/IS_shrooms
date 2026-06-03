@@ -17,17 +17,19 @@ public class Main {
     TRUNCATE TABLE
         analysis_result,
         fungi_occurrence,
-        soil_data
+        soil_data,
+        weather_data
     RESTART IDENTITY CASCADE
 """);
 
         conn.close();
 
         FungiOccurrence fo = new FungiOccurrence();
-        SoilData so = new SoilData();
-
+        SoilData sd = new SoilData();
+        WeatherData wd = new WeatherData();
 
         fo.fungiOccurrence(DBurl, props);
-        so.soilData(DBurl, props);
+        sd.soilData(DBurl, props);
+        wd.weatherData(DBurl, props);
     }
 }

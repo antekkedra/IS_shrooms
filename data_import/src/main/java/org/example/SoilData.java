@@ -28,7 +28,7 @@ public class SoilData {
         try (Connection conn = DriverManager.getConnection(DBurl, props);
              Statement st = conn.createStatement()) {
             System.out.println("Importing soil data.");
-           // st.execute("TRUNCATE TABLE soil_data RESTART IDENTITY CASCADE");
+            // st.execute("TRUNCATE TABLE soil_data RESTART IDENTITY CASCADE");
 
             try (ResultSet rs = st.executeQuery(selectLocations);
                  PreparedStatement pst = conn.prepareStatement(insertSoil)) {
@@ -88,7 +88,7 @@ public class SoilData {
 
                     pst.addBatch();
 
-                    Thread.sleep(300); // API rate limiting
+                    Thread.sleep(1200); // API rate limiting
                 }
 
                 pst.executeBatch();
@@ -103,12 +103,12 @@ public class SoilData {
                                   AND f.longitude = s.longitude
                                 """;
 
-            try (
-                    Statement updateStmt = conn.createStatement()) {
-                int updatedRows = updateStmt.executeUpdate(updateRelation);
-                System.out.println("Updated relations: " + updatedRows);
+                try (
+                        Statement updateStmt = conn.createStatement()) {
+                    int updatedRows = updateStmt.executeUpdate(updateRelation);
+                    System.out.println("Updated relations: " + updatedRows);
+                }
             }
-        }
         } catch (Exception e) {
             e.printStackTrace();
         }
