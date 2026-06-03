@@ -48,6 +48,11 @@ const Api = {
         return res.json();
     },
 
+    async getOccurrenceData() {
+        const res = await request('/analysis/occurrence-data');
+        return res ? res.json() : [];
+    },
+
     async exportXml(resource) {
         const res = await fetch(`${BASE}/export/${resource}`, {
             headers: { ...Auth.headers(), 'Accept': 'application/xml' }

@@ -103,21 +103,30 @@
             <h2>Wyniki analiz</h2>
             <button class="btn btn-accent btn-sm" id="exportAnalysisBtn">⬇ Eksportuj XML</button>
         </div>
-        <div class="card">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th><th>Gatunek</th><th>Rodzina</th>
-                            <th>Wartość korelacji</th><th>Data analizy</th>
-                        </tr>
-                    </thead>
-                    <tbody id="analysisBody">
-                        <tr><td colspan="5" class="no-data">Kliknij zakładkę, aby załadować dane</td></tr>
-                    </tbody>
-                </table>
+
+        <!-- Wykresy -->
+        <div class="chart-controls">
+            <label for="speciesSelector">Filtruj po rodzinie:</label>
+            <select id="speciesSelector">
+                <option value="">Wszystkie rodziny</option>
+            </select>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>pH gleby / liczba wystąpień</h3>
+                <div class="chart-wrap"><canvas id="chartPh"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Wilgotność gleby / liczba wystąpień</h3>
+                <div class="chart-wrap"><canvas id="chartMoisture"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Węgiel organiczny / liczba wystąpień</h3>
+                <div class="chart-wrap"><canvas id="chartCarbon"></canvas></div>
             </div>
         </div>
+
     </div>
 
     <!-- ── ADMIN ──────────────────────────────────────────── -->
@@ -137,6 +146,7 @@
 
 </div><!-- /main-content -->
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/dashboard.js"></script>

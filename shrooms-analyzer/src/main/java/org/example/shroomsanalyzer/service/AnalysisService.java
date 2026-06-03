@@ -1,6 +1,8 @@
 package org.example.shroomsanalyzer.service;
 
 import org.example.shroomsanalyzer.dto.AnalyzeFamilyDTO;
+import org.example.shroomsanalyzer.dto.OccurrenceDataDTO;
+import org.example.shroomsanalyzer.dto.SpeciesChartDTO;
 import org.example.shroomsanalyzer.entity.AnalysisResult;
 import org.example.shroomsanalyzer.repository.AnalysisResultRepository;
 import org.example.shroomsanalyzer.repository.FungiOccurrenceRepository;
@@ -36,5 +38,15 @@ public class AnalysisService {
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AnalyzeFamilyDTO analyzeByFamily(String family) {
         return fungiOccurrenceRepository.analyzeByFamily(family);
+    }
+
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public List<SpeciesChartDTO> getChartDataBySpecies() {
+        return fungiOccurrenceRepository.getChartDataBySpecies();
+    }
+
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
+    public List<OccurrenceDataDTO> getOccurrenceData() {
+        return fungiOccurrenceRepository.getOccurrenceData();
     }
 }

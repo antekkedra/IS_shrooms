@@ -132,19 +132,93 @@ document.getElementById('tabSoil').addEventListener('click', async () => {
 document.getElementById('exportSoilBtn').addEventListener('click', () => Api.exportXml('soil'));
 
 // ── Analysis ──────────────────────────────────────────────────
+let _occurrenceData = [];
+let _phChart = null, _moistureChart = null, _carbonChart = null;
+
 document.getElementById('tabAnalysis').addEventListener('click', async () => {
-    if (document.getElementById('analysisBody').dataset.loaded) return;
-    setLoading('analysisBody', 5);
-    const data = await Api.getAnalysis();
-    const rows = (data || []).map(a => ({
-        id:          a.id,
-        species:     a.fungiOccurrence?.species,
-        family:      a.fungiOccurrence?.family,
-        correlation: a.correlationValue?.toFixed(4),
-        createdAt:   a.createdAt ? new Date(a.createdAt).toLocaleDateString('pl-PL') : null
-    }));
-    renderTable('analysisBody', rows);
-    document.getElementById('analysisBody').dataset.loaded = '1';
+    if (!document.getElementById('speciesSelector').dataset.loaded) {
+        await loadCharts();
+    }
 });
+
+async function loadCharts() {
+    _occurrenceData = await Api.getOccurrenceData();
+    const selector = document.getElementById('speciesSelector');
+    const families = [...new Set(_occurrenceData.map(d => d.family).filter(Boolean))].sort();
+    selector.innerHTML = '<option value="">Wszystkie rodziny</option>' +
+        families.map(f => `<option value="${f}">${escHtml(f)}</option>`).join('');
+    selector.dataset.loaded = '1';
+    renderCharts('');
+}
+
+document.getElementById('speciesSelector').addEventListener('change', function () {
+    renderCharts(this.value);
+});
+
+function renderCharts(selectedFamily) {
+    const data = selectedFamily
+        ? _occurrenceData.filter(d => d.family === selectedFamily)
+        : _occurrenceData;
+
+    _phChart       = buildHistogram('chartPh',       _phChart,       data, 'ph',            'pH gleby',         0.5, '#2d6a3f', 'rgba(45,106,63,0.75)');
+    _moistureChart = buildHistogram('chartMoisture', _moistureChart, data, 'soilMoisture',  'Wilgotność gleby', 5,   '#1e6091', 'rgba(30,96,145,0.75)');
+    _carbonChart   = buildHistogram('chartCarbon',   _carbonChart,   data, 'organicCarbon', 'Węgiel organiczny',2,   '#7b4f12', 'rgba(123,79,18,0.75)');
+}
+
+// Histogram: oś X = wartości parametru glebowego (biny), oś Y = liczba wystąpień w każdym binie
+function buildHistogram(canvasId, existingChart, data, field, axisLabel, binSize, borderColor, fillColor) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    if (existingChart) existingChart.destroy();
+
+    const counts = {};
+    data.forEach(d => {
+        const val = d[field];
+        if (val == null || isNaN(val)) return;
+        const bin = Math.round(val / binSize) * binSize;
+        const key = bin.toFixed(2);
+        counts[key] = (counts[key] || 0) + 1;
+    });
+
+    const sortedKeys = Object.keys(counts).sort((a, b) => +a - +b);
+
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedKeys,
+            datasets: [{
+                label: 'Liczba wystąpień',
+                data: sortedKeys.map(k => counts[k]),
+                backgroundColor: fillColor,
+                borderColor,
+                borderWidth: 1,
+                borderRadius: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: items => `${axisLabel}: ${items[0].label}`,
+                        label: item => `Wystąpienia: ${item.parsed.y}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: axisLabel },
+                    ticks: { maxRotation: 45 }
+                },
+                y: {
+                    title: { display: true, text: 'Liczba wystąpień' },
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0 }
+                }
+            }
+        }
+    });
+}
 
 document.getElementById('exportAnalysisBtn').addEventListener('click', () => Api.exportXml('analysis'));
