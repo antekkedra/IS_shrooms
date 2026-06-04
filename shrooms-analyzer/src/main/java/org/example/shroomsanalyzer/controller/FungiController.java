@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/fungi")
+@RequestMapping("api/public/fungi")
 public class FungiController {
     private final FungiService service;
 

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shrooms Analyzer — Logowanie</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Shrooms Analyzer</h1>
+                <p>Zaloguj się, aby kontynuować</p>
+            </div>
+
+            <form id="loginForm" novalidate>
+                <div class="form-group">
+                    <label for="username">Nazwa użytkownika</label>
+                    <input type="text" id="username" placeholder="użytkownik" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Hasło</label>
+                    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+                </div>
+
+                <div id="errorMsg" class="error-msg hidden"></div>
+
+                <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+                    Zaloguj się
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        if (Auth.isLoggedIn()) window.location.href = '/dashboard.html';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn    = document.getElementById('loginBtn');
+            const errMsg = document.getElementById('errorMsg');
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            errMsg.classList.add('hidden');
+            btn.innerHTML = '<span class="spinner"></span>';
+            btn.disabled = true;
+
+            try {
+                const token = await (async () => {
+                    const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    if (!res.ok) throw new Error('Nieprawidłowa nazwa użytkownika lub hasło');
+                    return res.text();
+                })();
+
+                Auth.setToken(token.trim());
+                window.location.href = '/dashboard.html';
+            } catch (err) {
+                errMsg.textContent = err.message;
+                errMsg.classList.remove('hidden');
+                btn.innerHTML = 'Zaloguj się';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
