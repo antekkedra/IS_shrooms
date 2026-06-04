@@ -34,6 +34,10 @@ public class SecurityConfig {
                 ))
                 .authorizeHttpRequests(auth -> auth
 
+
+                        .requestMatchers("/", "/index.html", "/dashboard.html").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/favicon.ico").permitAll()
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
 
