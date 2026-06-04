@@ -1,4 +1,4 @@
-package org.example.shroomsanalyzer.security;
+package org.example.shroomsanalyzer.utils;
 
 import lombok.RequiredArgsConstructor;
 import org.example.shroomsanalyzer.entity.User;

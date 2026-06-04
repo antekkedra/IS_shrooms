@@ -1,4 +1,4 @@
-package org.example.shroomsanalyzer.security;
+package org.example.shroomsanalyzer.utils;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

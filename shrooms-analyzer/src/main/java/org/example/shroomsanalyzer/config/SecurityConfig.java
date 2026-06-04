@@ -1,6 +1,7 @@
-package org.example.shroomsanalyzer.security;
+package org.example.shroomsanalyzer.config;
 
 import lombok.RequiredArgsConstructor;
+import org.example.shroomsanalyzer.utils.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
