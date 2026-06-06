@@ -33,8 +33,6 @@ public class AnalysisService {
         return analysisResultRepository.findById(id);
     }
 
-    // REPEATABLE_READ: analiza agreguje dane z wielu wierszy — gwarantuje,
-    // że wartości odczytane raz nie zmienią się w trakcie obliczeń
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public AnalyzeFamilyDTO analyzeByFamily(String family) {
         return fungiOccurrenceRepository.analyzeByFamily(family);

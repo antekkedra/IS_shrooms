@@ -164,6 +164,111 @@ tbody td { padding: .65rem 1rem; border-bottom: 1px solid var(--border); white-s
     height: 280px;
 }
 
+/* ── SECTION DIVIDER ───────────────────────────────────────── */
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    margin: 1.5rem 0 1rem;
+}
+.section-divider::before,
+.section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ── WEATHER FILTER ────────────────────────────────────────── */
+.weather-filter {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.2rem;
+}
+.weather-filter h3 {
+    color: var(--green-dark);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+.slider-group {
+    margin-bottom: 1.4rem;
+}
+.slider-group:last-of-type { margin-bottom: 0; }
+.slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .75rem;
+}
+.slider-label {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.slider-value {
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--green-dark);
+    background: var(--green-light);
+    padding: .15rem .7rem;
+    border-radius: 99px;
+    min-width: 7rem;
+    text-align: center;
+}
+.range-slider-wrap {
+    margin: 0 .5rem;
+}
+.weather-search-btn {
+    margin-top: 1.4rem;
+    width: 100%;
+    justify-content: center;
+}
+
+/* noUiSlider theme overrides */
+.noUi-target {
+    background: var(--border);
+    border: none;
+    box-shadow: none;
+    height: 6px;
+    border-radius: 3px;
+}
+.noUi-connect {
+    background: var(--green-mid);
+}
+.noUi-handle {
+    width: 20px !important;
+    height: 20px !important;
+    top: -7px !important;
+    right: -10px !important;
+    border-radius: 50%;
+    background: var(--green-mid);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 6px rgba(0,0,0,.25);
+    cursor: grab;
+}
+.noUi-handle:active { cursor: grabbing; background: var(--green-dark); }
+.noUi-handle::before, .noUi-handle::after { display: none; }
+.noUi-tooltip {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--green-dark);
+    background: var(--green-light);
+    border: 1px solid #a5d6a7;
+    border-radius: 6px;
+    padding: .1rem .4rem;
+    bottom: 130%;
+}
+
 /* ── SPINNER ───────────────────────────────────────────────── */
 .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

@@ -27,10 +27,16 @@ public class FungiService {
         return repository.findById(id);
     }
 
-    // REPEATABLE_READ: wyniki wyszukiwania muszą być spójne przy wielokrotnym
-    // odczycie w tej samej transakcji (zapobiega phantom reads dla paginacji)
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public List<FungiOccurrence> getFungiBySpeciesContaining(String species) {
         return repository.findBySpeciesContaining(species);
+    }
+
+    @Transactional(readOnly = true, isolation = Isolation.READ_COMMITTED)
+    public List<FungiOccurrence> getFungiByWeatherConditions(
+            double tempMin, double tempMax,
+            double precipMin, double precipMax,
+            double windMin, double windMax) {
+        return repository.findByWeatherConditions(tempMin, tempMax, precipMin, precipMax, windMin, windMax);
     }
 }

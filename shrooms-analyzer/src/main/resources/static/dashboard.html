@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shrooms Analyzer — Dashboard</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
 </head>
 <body>
 
@@ -105,9 +106,9 @@
 
         <div id="familyResult" class="hidden"></div>
 
-        <!-- Wykresy -->
+        <!-- Wykresy glebowe -->
         <div class="chart-controls">
-            <label for="speciesSelector">Filtruj wykresy po rodzinie:</label>
+            <label for="speciesSelector">Filtruj wykresy glebowe po rodzinie:</label>
             <select id="speciesSelector">
                 <option value="">Wszystkie rodziny</option>
             </select>
@@ -125,6 +126,77 @@
             <div class="chart-card">
                 <h3>Węgiel organiczny / liczba wystąpień</h3>
                 <div class="chart-wrap"><canvas id="chartCarbon"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Wykresy pogodowe -->
+        <div class="section-divider">Wykresy pogodowe</div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Wystąpienia grzybów / temperatura (°C)</h3>
+                <div class="chart-wrap"><canvas id="chartTemp"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Wystąpienia grzybów / opad (mm)</h3>
+                <div class="chart-wrap"><canvas id="chartPrecip"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Wystąpienia grzybów / prędkość wiatru (m/s)</h3>
+                <div class="chart-wrap"><canvas id="chartWind"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Filtr pogodowy -->
+        <div class="weather-filter">
+            <h3>Filtruj grzyby po warunkach pogodowych</h3>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Temperatura (°C)</span>
+                    <span class="slider-value" id="tempRangeLabel">-10 – 35</span>
+                </div>
+                <div id="tempSlider" class="range-slider-wrap"></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Opad atmosferyczny (mm)</span>
+                    <span class="slider-value" id="precipRangeLabel">0 – 50</span>
+                </div>
+                <div id="precipSlider" class="range-slider-wrap"></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span class="slider-label">Prędkość wiatru (m/s)</span>
+                    <span class="slider-value" id="windRangeLabel">0 – 40</span>
+                </div>
+                <div id="windSlider" class="range-slider-wrap"></div>
+            </div>
+
+            <button class="btn btn-primary weather-search-btn" id="weatherSearchBtn">
+                Szukaj grzybów w tych warunkach
+            </button>
+        </div>
+
+        <!-- Wyniki filtra pogodowego -->
+        <div class="card" id="weatherResultCard">
+            <div style="padding:.75rem 1.5rem 0;">
+                <h3 style="color:var(--green-dark);">Grzyby pasujące do wybranych warunków</h3>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Gatunek</th><th>Rodzaj</th><th>Rodzina</th>
+                            <th>Kraj</th><th>Szerokość</th><th>Długość</th><th>Data zdarzenia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weatherFungiBody">
+                        <tr><td colspan="8" class="no-data">Ustaw zakresy i kliknij „Szukaj"</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -201,6 +273,7 @@
 </div><!-- /main-content -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/dashboard.js"></script>

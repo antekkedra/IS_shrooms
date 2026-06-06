@@ -183,7 +183,6 @@ public class DatabaseUpdateService {
         try (Connection conn = DriverManager.getConnection(DBurl, props);
              Statement st = conn.createStatement()) {
             System.out.println("Importing soil data.");
-            // st.execute("TRUNCATE TABLE soil_data RESTART IDENTITY CASCADE");
 
             try (ResultSet rs = st.executeQuery(selectLocations);
                  PreparedStatement pst = conn.prepareStatement(insertSoil)) {
@@ -334,7 +333,6 @@ public class DatabaseUpdateService {
         Connection conn = DriverManager.getConnection(DBurl, props);
         System.out.println("Importing fungi data.");
         Statement st = conn.createStatement();
-        //st.execute("TRUNCATE TABLE fungi_occurrence RESTART IDENTITY");
         String insertSQL = "INSERT INTO fungi_occurrence (species, genus, family, latitude, longitude, event_date, country) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pst = conn.prepareStatement(insertSQL)) {
             for (String[] record : records) {

@@ -63,6 +63,17 @@ const Api = {
         return res ? res.json() : [];
     },
 
+    async getWeatherOccurrenceData() {
+        const res = await request('/public/weather/occurrence-data');
+        return res ? res.json() : [];
+    },
+
+    async getFungiByWeather(tempMin, tempMax, precipMin, precipMax, windMin, windMax) {
+        const params = new URLSearchParams({ tempMin, tempMax, precipMin, precipMax, windMin, windMax });
+        const res = await request(`/public/weather/fungi-by-conditions?${params}`);
+        return res ? res.json() : [];
+    },
+
     async exportXml(resource) {
         const res = await fetch(`${BASE}/export/${resource}`, {
             headers: { ...Auth.headers(), 'Accept': 'application/xml' }

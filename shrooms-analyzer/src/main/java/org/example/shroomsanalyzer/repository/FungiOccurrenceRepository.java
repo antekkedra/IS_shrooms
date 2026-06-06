@@ -58,4 +58,33 @@ FROM FungiOccurrence fo
 JOIN fo.soilData sd
 """)
     List<OccurrenceDataDTO> getOccurrenceData();
+
+    @Query("""
+SELECT new org.example.shroomsanalyzer.dto.WeatherOccurrenceDTO(
+    wd.temperatureMean,
+    wd.precipitationSum,
+    wd.windSpeedMean
+)
+FROM FungiOccurrence fo, WeatherData wd
+WHERE fo.latitude = wd.latitude AND fo.longitude = wd.longitude
+""")
+    List<org.example.shroomsanalyzer.dto.WeatherOccurrenceDTO> getWeatherOccurrenceData();
+
+    @Query("""
+SELECT DISTINCT fo
+FROM FungiOccurrence fo, WeatherData wd
+WHERE fo.latitude = wd.latitude
+  AND fo.longitude = wd.longitude
+  AND wd.temperatureMean BETWEEN :tempMin AND :tempMax
+  AND wd.precipitationSum BETWEEN :precipMin AND :precipMax
+  AND wd.windSpeedMean BETWEEN :windMin AND :windMax
+""")
+    List<FungiOccurrence> findByWeatherConditions(
+            @Param("tempMin") Double tempMin,
+            @Param("tempMax") Double tempMax,
+            @Param("precipMin") Double precipMin,
+            @Param("precipMax") Double precipMax,
+            @Param("windMin") Double windMin,
+            @Param("windMax") Double windMax
+    );
 }

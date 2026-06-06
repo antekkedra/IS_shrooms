@@ -118,8 +118,11 @@ document.getElementById('tabSoil').addEventListener('click', async () => {
 document.getElementById('exportSoilBtn').addEventListener('click', () => Api.exportXml('soil'));
 
 // ── Analysis ──────────────────────────────────────────────────
-let _occurrenceData = [];
+let _occurrenceData      = [];
+let _weatherData         = [];
+let _weatherFungiResults = [];
 let _phChart = null, _moistureChart = null, _carbonChart = null;
+let _tempChart = null, _precipChart = null, _windChart = null;
 
 document.getElementById('tabAnalysis').addEventListener('click', async () => {
     if (!document.getElementById('speciesSelector').dataset.loaded) {
@@ -153,16 +156,181 @@ document.getElementById('analyzeFamilyBtn').addEventListener('click', async () =
     result.classList.remove('hidden');
 });
 
-document.getElementById('exportAnalysisBtn').addEventListener('click', () => Api.exportXml('analysis'));
+document.getElementById('exportAnalysisBtn').addEventListener('click', exportAnalysisXml);
+
+// ── Analysis XML export ───────────────────────────────────────
+function xmlEsc(v) {
+    if (v == null) return '';
+    return String(v)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function histogramBins(data, field, binSize) {
+    const counts = {};
+    data.forEach(d => {
+        const val = d[field];
+        if (val == null || isNaN(val)) return;
+        const bin = Math.round(val / binSize) * binSize;
+        const key = bin.toFixed(2);
+        counts[key] = (counts[key] || 0) + 1;
+    });
+    return Object.keys(counts).sort((a, b) => +a - +b).map(k => ({ value: k, count: counts[k] }));
+}
+
+function chartXml(indent, nazwa, kolumnaWartosci, etykietaWartosci, bins) {
+    const i1 = indent, i2 = indent + '  ', i3 = indent + '    ';
+    const rows = bins.map(b =>
+        `${i2}<wiersz>\n${i3}<${kolumnaWartosci}>${b.value}</${kolumnaWartosci}>\n${i3}<LiczbaWystapien>${b.count}</LiczbaWystapien>\n${i2}</wiersz>`
+    ).join('\n');
+    return [
+        `${i1}<wykres nazwa="${xmlEsc(nazwa)}">`,
+        `${i2}<kolumny>${xmlEsc(etykietaWartosci)} | LiczbaWystapien</kolumny>`,
+        rows,
+        `${i1}</wykres>`
+    ].join('\n');
+}
+
+function exportAnalysisXml() {
+    if (!_occurrenceData.length && !_weatherData.length) {
+        alert('Dane wykresów nie zostały jeszcze załadowane. Otwórz zakładkę Analiza i poczekaj na załadowanie.');
+        return;
+    }
+
+    const [tempMin,   tempMax]   = _sliderTemp.noUiSlider.get(true);
+    const [precipMin, precipMax] = _sliderPrecip.noUiSlider.get(true);
+    const [windMin,   windMax]   = _sliderWind.noUiSlider.get(true);
+
+    const soilDefs = [
+        { nazwa: 'pH gleby',          kolumna: 'pH',               etykieta: 'pH',               field: 'ph',            binSize: 0.5 },
+        { nazwa: 'Wilgotność gleby',   kolumna: 'Wilgotnosc',       etykieta: 'Wilgotnosc',       field: 'soilMoisture',  binSize: 5   },
+        { nazwa: 'Węgiel organiczny',  kolumna: 'WegielOrganiczny', etykieta: 'WegielOrganiczny', field: 'organicCarbon', binSize: 2   }
+    ];
+    const weatherDefs = [
+        { nazwa: 'Temperatura',       kolumna: 'Temperatura_C',       etykieta: 'Temperatura_C',       field: 'temperatureMean',  binSize: 1 },
+        { nazwa: 'Opad atmosferyczny', kolumna: 'Opad_mm',            etykieta: 'Opad_mm',             field: 'precipitationSum', binSize: 1 },
+        { nazwa: 'Prędkość wiatru',    kolumna: 'PredkoscWiatru_ms',  etykieta: 'PredkoscWiatru_ms',   field: 'windSpeedMean',    binSize: 1 }
+    ];
+
+    const lines = [];
+    lines.push('<?xml version="1.0" encoding="UTF-8"?>');
+    lines.push('<raportAnalizy>');
+
+    // Zakresy pogodowe
+    lines.push('  <zakresyPogodowe>');
+    lines.push(`    <temperatura   min="${tempMin}"   max="${tempMax}"   jednostka="°C"/>`);
+    lines.push(`    <opad          min="${precipMin}" max="${precipMax}" jednostka="mm"/>`);
+    lines.push(`    <predkoscWiatru min="${windMin}"  max="${windMax}"   jednostka="m/s"/>`);
+    lines.push('  </zakresyPogodowe>');
+
+    // Grzyby pasujące do warunków pogodowych
+    lines.push(`  <grzybyWWarunkachPogodowych liczba="${_weatherFungiResults.length}">`);
+    _weatherFungiResults.forEach(f => {
+        lines.push('    <grzyb>');
+        lines.push(`      <id>${xmlEsc(f.id)}</id>`);
+        lines.push(`      <gatunek>${xmlEsc(f.species)}</gatunek>`);
+        lines.push(`      <rodzaj>${xmlEsc(f.genus)}</rodzaj>`);
+        lines.push(`      <rodzina>${xmlEsc(f.family)}</rodzina>`);
+        lines.push(`      <kraj>${xmlEsc(f.country)}</kraj>`);
+        lines.push(`      <szerokosc>${xmlEsc(f.latitude?.toFixed(4))}</szerokosc>`);
+        lines.push(`      <dlugosc>${xmlEsc(f.longitude?.toFixed(4))}</dlugosc>`);
+        lines.push(`      <dataZdarzenia>${xmlEsc(f.eventDate)}</dataZdarzenia>`);
+        lines.push('    </grzyb>');
+    });
+    lines.push('  </grzybyWWarunkachPogodowych>');
+
+    // Dane wykresów glebowych
+    lines.push('  <wykresyGlebowe>');
+    soilDefs.forEach(def => {
+        const bins = histogramBins(_occurrenceData, def.field, def.binSize);
+        lines.push(chartXml('    ', def.nazwa, def.kolumna, def.etykieta, bins));
+    });
+    lines.push('  </wykresyGlebowe>');
+
+    // Dane wykresów pogodowych
+    lines.push('  <wykresyPogodowe>');
+    weatherDefs.forEach(def => {
+        const bins = histogramBins(_weatherData, def.field, def.binSize);
+        lines.push(chartXml('    ', def.nazwa, def.kolumna, def.etykieta, bins));
+    });
+    lines.push('  </wykresyPogodowe>');
+
+    lines.push('</raportAnalizy>');
+
+    const xml  = lines.join('\n');
+    const blob = new Blob([xml], { type: 'application/xml' });
+    const url  = URL.createObjectURL(blob);
+    const a    = Object.assign(document.createElement('a'), { href: url, download: 'analiza.xml' });
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ── Weather filter ─────────────────────────────────────────────
+function makeSlider(id, labelId, min, max, start, step, unit) {
+    const el = document.getElementById(id);
+    noUiSlider.create(el, {
+        start,
+        connect: true,
+        range: { min, max },
+        step,
+        tooltips: [
+            { to: v => (Number.isInteger(step) ? Math.round(v) : Math.round(v * 10) / 10) + unit },
+            { to: v => (Number.isInteger(step) ? Math.round(v) : Math.round(v * 10) / 10) + unit }
+        ]
+    });
+    const label = document.getElementById(labelId);
+    el.noUiSlider.on('update', vals => {
+        label.textContent = `${vals[0]} – ${vals[1]}`;
+    });
+    return el;
+}
+
+const _sliderTemp   = makeSlider('tempSlider',   'tempRangeLabel',   -10, 35, [-10, 35], 1,   '°C');
+const _sliderPrecip = makeSlider('precipSlider', 'precipRangeLabel',   0, 50, [0,   50], 0.5, ' mm');
+const _sliderWind   = makeSlider('windSlider',   'windRangeLabel',     0, 40, [0,   40], 0.5, ' m/s');
+
+document.getElementById('weatherSearchBtn').addEventListener('click', async () => {
+    const [tempMin,   tempMax]   = _sliderTemp.noUiSlider.get(true);
+    const [precipMin, precipMax] = _sliderPrecip.noUiSlider.get(true);
+    const [windMin,   windMax]   = _sliderWind.noUiSlider.get(true);
+
+    setLoading('weatherFungiBody', 8);
+    const data = await Api.getFungiByWeather(tempMin, tempMax, precipMin, precipMax, windMin, windMax);
+    _weatherFungiResults = data || [];
+    const rows = _weatherFungiResults.map(f => ({
+        id:        f.id,
+        species:   f.species,
+        genus:     f.genus,
+        family:    f.family,
+        country:   f.country,
+        latitude:  f.latitude?.toFixed(4),
+        longitude: f.longitude?.toFixed(4),
+        eventDate: f.eventDate
+    }));
+    if (rows.length === 0) {
+        document.getElementById('weatherFungiBody').innerHTML =
+            `<tr><td colspan="8" class="no-data">Brak grzybów dla wybranych warunków pogodowych</td></tr>`;
+    } else {
+        renderTable('weatherFungiBody', rows);
+    }
+});
 
 async function loadCharts() {
-    _occurrenceData = await Api.getOccurrenceData();
+    [_occurrenceData, _weatherData] = await Promise.all([
+        Api.getOccurrenceData(),
+        Api.getWeatherOccurrenceData()
+    ]);
+
     const selector = document.getElementById('speciesSelector');
     const families = [...new Set(_occurrenceData.map(d => d.family).filter(Boolean))].sort();
     selector.innerHTML = '<option value="">Wszystkie rodziny</option>' +
         families.map(f => `<option value="${f}">${escHtml(f)}</option>`).join('');
     selector.dataset.loaded = '1';
+
     renderCharts('');
+    renderWeatherCharts();
 }
 
 document.getElementById('speciesSelector').addEventListener('change', function () {
@@ -177,6 +345,12 @@ function renderCharts(selectedFamily) {
     _phChart       = buildHistogram('chartPh',       _phChart,       data, 'ph',            'pH gleby',         0.5, '#2d6a3f', 'rgba(45,106,63,0.75)');
     _moistureChart = buildHistogram('chartMoisture', _moistureChart, data, 'soilMoisture',  'Wilgotność gleby', 5,   '#1e6091', 'rgba(30,96,145,0.75)');
     _carbonChart   = buildHistogram('chartCarbon',   _carbonChart,   data, 'organicCarbon', 'Węgiel organiczny',2,   '#7b4f12', 'rgba(123,79,18,0.75)');
+}
+
+function renderWeatherCharts() {
+    _tempChart   = buildHistogram('chartTemp',   _tempChart,   _weatherData, 'temperatureMean',  'Temperatura (°C)', 1, '#8d3b2b', 'rgba(141,59,43,0.75)');
+    _precipChart = buildHistogram('chartPrecip', _precipChart, _weatherData, 'precipitationSum', 'Opad (mm)',        1, '#1565c0', 'rgba(21,101,192,0.75)');
+    _windChart   = buildHistogram('chartWind',   _windChart,   _weatherData, 'windSpeedMean',    'Prędkość wiatru (m/s)', 1, '#4a148c', 'rgba(74,20,140,0.75)');
 }
 
 function buildHistogram(canvasId, existingChart, data, field, axisLabel, binSize, borderColor, fillColor) {
