@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17
+    container_name: shrooms-db
+    environment:
+      POSTGRES_DB: shroomsDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: haslo
+    volumes:
+      - ./docker/db/shroomsDB.sql:/docker-entrypoint-initdb.d/shroomsDB.sql
+    ports:
+      - "5433:5432"
+
+  app:
+    build: ./shrooms-analyzer
+    container_name: shrooms-app
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shroomsDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: haslo
