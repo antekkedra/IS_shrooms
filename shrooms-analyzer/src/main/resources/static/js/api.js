@@ -6,6 +6,16 @@ async function request(url, options = {}) {
     return res;
 }
 
+async function requestJson(url, method, body) {
+    const res = await fetch(BASE + url, {
+        method,
+        headers: { ...Auth.headers(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (res.status === 401) { Auth.logout(); return null; }
+    return res;
+}
+
 const Api = {
     async login(username, password) {
         const res = await fetch(`${BASE}/auth/login`, {
@@ -23,33 +33,33 @@ const Api = {
     },
 
     async getFungi() {
-        const res = await request('/fungi');
+        const res = await request('/public/fungi');
         return res ? res.json() : [];
     },
 
     async searchFungi(species) {
-        const res = await request(`/fungi/species/${encodeURIComponent(species)}`);
+        const res = await request(`/public/fungi/species/${encodeURIComponent(species)}`);
         return res ? res.json() : [];
     },
 
     async getSoil() {
-        const res = await request('/soil');
+        const res = await request('/public/soil');
         return res ? res.json() : [];
     },
 
     async getAnalysis() {
-        const res = await request('/analysis');
+        const res = await request('/public/analysis');
         return res ? res.json() : [];
     },
 
     async analyzeFamily(family) {
-        const res = await request(`/analysis/family/${encodeURIComponent(family)}`);
+        const res = await request(`/public/analysis/family/${encodeURIComponent(family)}`);
         if (!res || !res.ok) return null;
         return res.json();
     },
 
     async getOccurrenceData() {
-        const res = await request('/analysis/occurrence-data');
+        const res = await request('/public/analysis/occurrence-data');
         return res ? res.json() : [];
     },
 
@@ -65,5 +75,23 @@ const Api = {
         const a    = Object.assign(document.createElement('a'), { href: url, download: `${resource}.xml` });
         a.click();
         URL.revokeObjectURL(url);
+    },
+
+    // ── Admin ──────────────────────────────────────────────────
+    async getAdminUsers() {
+        const res = await request('/admin/users');
+        return res ? res.json() : [];
+    },
+
+    async createAdminUser(data) {
+        return requestJson('/admin/users', 'POST', data);
+    },
+
+    async deleteAdminUser(id) {
+        return request(`/admin/users/${id}`, { method: 'DELETE' });
+    },
+
+    async changeAdminUserPassword(id, password) {
+        return requestJson(`/admin/users/${id}/password`, 'PATCH', { password });
     }
 };

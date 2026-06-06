@@ -51,6 +51,14 @@ function setLoading(tbodyId, cols) {
         `<tr><td colspan="${cols}" class="no-data">Ładowanie…</td></tr>`;
 }
 
+function showAlert(id, message, type) {
+    const el = document.getElementById(id);
+    el.className = `alert alert-${type === 'success' ? 'success' : 'error'}`;
+    el.textContent = message;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 4000);
+}
+
 // ── Fungi ─────────────────────────────────────────────────────
 async function loadFungi() {
     setLoading('fungiBody', 8);
@@ -82,28 +90,6 @@ document.getElementById('searchSpeciesBtn').addEventListener('click', async () =
 
 document.getElementById('searchSpecies').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('searchSpeciesBtn').click();
-});
-
-document.getElementById('analyzeFamilyBtn').addEventListener('click', async () => {
-    const family = document.getElementById('analyzeFamily').value.trim();
-    if (!family) return;
-    const result = document.getElementById('familyResult');
-    result.classList.add('hidden');
-
-    const dto = await Api.analyzeFamily(family);
-    if (!dto) { result.innerHTML = '<div class="alert alert-error">Nie znaleziono danych dla podanej rodziny.</div>'; result.classList.remove('hidden'); return; }
-
-    result.innerHTML = `
-        <div class="summary-card">
-            <h3>Analiza rodziny: <em>${escHtml(dto.family)}</em></h3>
-            <div class="summary-grid">
-                <div class="stat-box"><div class="stat-value">${escHtml(dto.occurrences)}</div><div class="stat-label">Wystąpienia</div></div>
-                <div class="stat-box"><div class="stat-value">${dto.avgPh?.toFixed(2) ?? '—'}</div><div class="stat-label">Śr. pH gleby</div></div>
-                <div class="stat-box"><div class="stat-value">${dto.avgMoisture?.toFixed(2) ?? '—'}</div><div class="stat-label">Śr. wilgotność</div></div>
-                <div class="stat-box"><div class="stat-value">${dto.avgCarbon?.toFixed(2) ?? '—'}</div><div class="stat-label">Śr. węgiel org.</div></div>
-            </div>
-        </div>`;
-    result.classList.remove('hidden');
 });
 
 document.getElementById('exportFungiBtn').addEventListener('click', () => Api.exportXml('fungi'));
@@ -141,6 +127,34 @@ document.getElementById('tabAnalysis').addEventListener('click', async () => {
     }
 });
 
+document.getElementById('analyzeFamilyBtn').addEventListener('click', async () => {
+    const family = document.getElementById('analyzeFamily').value.trim();
+    if (!family) return;
+    const result = document.getElementById('familyResult');
+    result.classList.add('hidden');
+
+    const dto = await Api.analyzeFamily(family);
+    if (!dto) {
+        result.innerHTML = '<div class="alert alert-error">Nie znaleziono danych dla podanej rodziny.</div>';
+        result.classList.remove('hidden');
+        return;
+    }
+
+    result.innerHTML = `
+        <div class="summary-card">
+            <h3>Analiza rodziny: <em>${escHtml(dto.family)}</em></h3>
+            <div class="summary-grid">
+                <div class="stat-box"><div class="stat-value">${escHtml(dto.occurrences)}</div><div class="stat-label">Wystąpienia</div></div>
+                <div class="stat-box"><div class="stat-value">${dto.avgPh?.toFixed(2) ?? '—'}</div><div class="stat-label">Śr. pH gleby</div></div>
+                <div class="stat-box"><div class="stat-value">${dto.avgMoisture?.toFixed(2) ?? '—'}</div><div class="stat-label">Śr. wilgotność</div></div>
+                <div class="stat-box"><div class="stat-value">${dto.avgCarbon?.toFixed(2) ?? '—'}</div><div class="stat-label">Śr. węgiel org.</div></div>
+            </div>
+        </div>`;
+    result.classList.remove('hidden');
+});
+
+document.getElementById('exportAnalysisBtn').addEventListener('click', () => Api.exportXml('analysis'));
+
 async function loadCharts() {
     _occurrenceData = await Api.getOccurrenceData();
     const selector = document.getElementById('speciesSelector');
@@ -165,7 +179,6 @@ function renderCharts(selectedFamily) {
     _carbonChart   = buildHistogram('chartCarbon',   _carbonChart,   data, 'organicCarbon', 'Węgiel organiczny',2,   '#7b4f12', 'rgba(123,79,18,0.75)');
 }
 
-// Histogram: oś X = wartości parametru glebowego (biny), oś Y = liczba wystąpień w każdym binie
 function buildHistogram(canvasId, existingChart, data, field, axisLabel, binSize, borderColor, fillColor) {
     const ctx = document.getElementById(canvasId).getContext('2d');
     if (existingChart) existingChart.destroy();
@@ -221,4 +234,111 @@ function buildHistogram(canvasId, existingChart, data, field, axisLabel, binSize
     });
 }
 
-document.getElementById('exportAnalysisBtn').addEventListener('click', () => Api.exportXml('analysis'));
+// ── Admin ─────────────────────────────────────────────────────
+document.getElementById('tabAdmin').addEventListener('click', async () => {
+    if (!document.getElementById('usersBody').dataset.loaded) {
+        await loadAdminUsers();
+    }
+});
+
+async function loadAdminUsers() {
+    setLoading('usersBody', 4);
+    const users = await Api.getAdminUsers();
+    renderUsersTable(users);
+    document.getElementById('usersBody').dataset.loaded = '1';
+}
+
+function renderUsersTable(users) {
+    const tbody = document.getElementById('usersBody');
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="no-data">Brak użytkowników</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = users.map(u => `
+        <tr>
+            <td>${escHtml(u.id)}</td>
+            <td>${escHtml(u.username)}</td>
+            <td>${escHtml(u.role)}</td>
+            <td style="display:flex;gap:.5rem;padding:.5rem 1rem;">
+                <button class="btn btn-secondary btn-sm"
+                    data-action="changepass" data-id="${u.id}"
+                    data-username="${String(u.username).replace(/"/g,'&quot;')}">Zmień hasło</button>
+                <button class="btn btn-danger btn-sm"
+                    data-action="delete" data-id="${u.id}">Usuń</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+document.getElementById('usersBody').addEventListener('click', async e => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const id = parseInt(btn.dataset.id);
+    if (btn.dataset.action === 'delete') {
+        await deleteUser(id);
+    } else if (btn.dataset.action === 'changepass') {
+        openChangePassword(id, btn.dataset.username);
+    }
+});
+
+async function deleteUser(id) {
+    if (!confirm('Czy na pewno chcesz usunąć tego użytkownika?')) return;
+    const res = await Api.deleteAdminUser(id);
+    if (res && (res.ok || res.status === 204)) {
+        document.getElementById('usersBody').removeAttribute('data-loaded');
+        document.getElementById('changePasswordSection').classList.add('hidden');
+        await loadAdminUsers();
+    } else {
+        alert('Błąd podczas usuwania użytkownika');
+    }
+}
+
+let _changePasswordUserId = null;
+
+function openChangePassword(id, username) {
+    _changePasswordUserId = id;
+    const section = document.getElementById('changePasswordSection');
+    section.classList.remove('hidden');
+    document.getElementById('changePasswordUsername').textContent = username;
+    document.getElementById('changePasswordInput').value = '';
+    section.scrollIntoView({ behavior: 'smooth' });
+}
+
+document.getElementById('confirmChangePasswordBtn').addEventListener('click', async () => {
+    const password = document.getElementById('changePasswordInput').value.trim();
+    if (!password) { alert('Podaj nowe hasło'); return; }
+    const res = await Api.changeAdminUserPassword(_changePasswordUserId, password);
+    if (res && res.ok) {
+        document.getElementById('changePasswordSection').classList.add('hidden');
+        _changePasswordUserId = null;
+        showAlert('adminAlert', 'Hasło zostało zmienione', 'success');
+    } else {
+        showAlert('adminAlert', 'Błąd podczas zmiany hasła', 'error');
+    }
+});
+
+document.getElementById('cancelChangePasswordBtn').addEventListener('click', () => {
+    document.getElementById('changePasswordSection').classList.add('hidden');
+    _changePasswordUserId = null;
+});
+
+document.getElementById('createUserBtn').addEventListener('click', async () => {
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value.trim();
+    const role     = document.getElementById('newRole').value;
+    if (!username || !password) {
+        showAlert('createUserAlert', 'Podaj nazwę użytkownika i hasło', 'error');
+        return;
+    }
+    const res = await Api.createAdminUser({ username, password, role });
+    if (res && res.ok) {
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('usersBody').removeAttribute('data-loaded');
+        await loadAdminUsers();
+        showAlert('createUserAlert', 'Użytkownik został dodany', 'success');
+    } else {
+        const text = res ? await res.text() : 'Błąd serwera';
+        showAlert('createUserAlert', `Błąd: ${text}`, 'error');
+    }
+});

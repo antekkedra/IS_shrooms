@@ -46,16 +46,6 @@
             <button class="btn btn-secondary" id="searchSpeciesBtn">Szukaj</button>
         </div>
 
-        <div class="controls">
-            <div class="form-group">
-                <label>Analizuj po rodzinie</label>
-                <input type="text" id="analyzeFamily" placeholder="np. Amanitaceae">
-            </div>
-            <button class="btn btn-primary" id="analyzeFamilyBtn">Analizuj</button>
-        </div>
-
-        <div id="familyResult" class="hidden"></div>
-
         <div class="card">
             <div class="table-wrapper">
                 <table>
@@ -104,9 +94,20 @@
             <button class="btn btn-accent btn-sm" id="exportAnalysisBtn">⬇ Eksportuj XML</button>
         </div>
 
+        <!-- Analizuj po rodzinie -->
+        <div class="controls">
+            <div class="form-group">
+                <label>Analizuj po rodzinie</label>
+                <input type="text" id="analyzeFamily" placeholder="np. Amanitaceae">
+            </div>
+            <button class="btn btn-primary" id="analyzeFamilyBtn">Analizuj</button>
+        </div>
+
+        <div id="familyResult" class="hidden"></div>
+
         <!-- Wykresy -->
         <div class="chart-controls">
-            <label for="speciesSelector">Filtruj po rodzinie:</label>
+            <label for="speciesSelector">Filtruj wykresy po rodzinie:</label>
             <select id="speciesSelector">
                 <option value="">Wszystkie rodziny</option>
             </select>
@@ -126,7 +127,6 @@
                 <div class="chart-wrap"><canvas id="chartCarbon"></canvas></div>
             </div>
         </div>
-
     </div>
 
     <!-- ── ADMIN ──────────────────────────────────────────── -->
@@ -134,13 +134,67 @@
         <div class="section-header">
             <h2>Panel administratora</h2>
         </div>
-        <div class="admin-info">
-            <h3>Strefa admina</h3>
-            <p style="margin:.5rem 0 1rem">Zalogowany z rolą: <span id="adminRole" class="admin-badge">—</span></p>
-            <p style="color:#555;font-size:.9rem">
-                Ta sekcja jest dostępna wyłącznie dla użytkowników z rolą <strong>ADMIN</strong>.
-                Możliwości: zarządzanie użytkownikami, pełen dostęp do danych.
-            </p>
+        <p style="margin-bottom:1.2rem;">
+            Zalogowany z rolą: <span id="adminRole" class="admin-badge">—</span>
+        </p>
+
+        <!-- Dodaj użytkownika -->
+        <div class="card" style="padding:1.2rem 1.5rem;margin-bottom:1.2rem;">
+            <h3 style="color:var(--green-dark);margin-bottom:1rem;">Dodaj nowego użytkownika</h3>
+            <div class="controls" style="box-shadow:none;padding:0;margin-bottom:.75rem;">
+                <div class="form-group">
+                    <label>Nazwa użytkownika</label>
+                    <input type="text" id="newUsername" placeholder="np. jan_kowalski">
+                </div>
+                <div class="form-group">
+                    <label>Hasło</label>
+                    <input type="password" id="newPassword" placeholder="Hasło">
+                </div>
+                <div class="form-group">
+                    <label>Rola</label>
+                    <select id="newRole">
+                        <option value="USER">USER</option>
+                        <option value="ADMIN">ADMIN</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="createUserBtn">Dodaj</button>
+            </div>
+            <div id="createUserAlert" class="hidden"></div>
+        </div>
+
+        <!-- Lista użytkowników -->
+        <div class="card">
+            <div style="padding:1rem 1.5rem 0;">
+                <h3 style="color:var(--green-dark);">Lista użytkowników</h3>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Nazwa użytkownika</th><th>Rola</th><th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody">
+                        <tr><td colspan="4" class="no-data">Kliknij zakładkę Admin, aby załadować dane</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Zmień hasło (inline) -->
+        <div id="changePasswordSection" class="card hidden" style="padding:1.2rem 1.5rem;margin-top:1.2rem;">
+            <h3 style="color:var(--green-dark);margin-bottom:1rem;">
+                Zmień hasło — <span id="changePasswordUsername"></span>
+            </h3>
+            <div class="controls" style="box-shadow:none;padding:0;margin-bottom:.75rem;">
+                <div class="form-group">
+                    <label>Nowe hasło</label>
+                    <input type="password" id="changePasswordInput" placeholder="Nowe hasło">
+                </div>
+                <button class="btn btn-primary" id="confirmChangePasswordBtn">Zmień hasło</button>
+                <button class="btn btn-secondary" id="cancelChangePasswordBtn">Anuluj</button>
+            </div>
+            <div id="adminAlert" class="hidden"></div>
         </div>
     </div>
 
