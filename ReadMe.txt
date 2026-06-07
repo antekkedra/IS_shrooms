@@ -22,3 +22,5 @@ mvn clean package -DskipTests=true
 cd ..
 docker compose build
 docker compose up
+
+Aplikacja dostępna jest pod adresem: http://localhost:8080/
